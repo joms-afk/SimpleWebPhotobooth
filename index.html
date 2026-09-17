@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Photo Booth V2</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin: 10px 0 20px;
+}
+
+/* TEMPLATE SECTION */
+
+.template-title {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.templates {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.template {
+    background: #222;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 6px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.template.active {
+    border-color: #ff3b30;
+}
+
+.template-preview {
+    height: 75px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* TEMPLATE COLORS */
+
+.t1 {
+    background: white;
+    color: black;
+}
+
+.t2 {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    color: #8a164f;
+}
+
+.t3 {
+    background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+    color: white;
+}
+
+.t4 {
+    background: linear-gradient(135deg, #f6d365, #fda085);
+    color: white;
+}
+
+.t5 {
+    background: #000;
+    color: white;
+}
+
+/* INPUT */
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+
+    border: none;
+    border-radius: 8px;
+
+    font-size: 16px;
+}
+
+/* CAMERA */
+
+.camera-box {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 15px;
+    background: black;
+}
+
+video {
+    width: 100%;
+    display: block;
+    transform: scaleX(-1);
+}
+
+canvas {
+    width: 100%;
+    display: none;
+    border-radius: 15px;
+}
+
+#countdown {
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    font-size: 90px;
+    font-weight: bold;
+
+    color: white;
+
+    text-shadow: 0 0 20px black;
+
+    display: none;
+}
+
+/* BUTTONS */
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+
+    margin-top: 20px;
+
+    flex-wrap: wrap;
+}
+
+button {
+    border: none;
+
+    padding: 14px 20px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#takePhoto {
+    background: #ff3b30;
+    color: white;
+}
+
+#retake {
+    background: #555;
+    color: white;
+
+    display: none;
+}
+
+#savePhoto {
+    background: #34c759;
+    color: white;
+
+    display: none;
+}
+
+button:active {
+    transform: scale(0.96);
+}
+
+#message {
+    text-align: center;
+
+    margin-top: 15px;
+
+    color: #ccc;
+}
+
+/* MOBILE */
+
+@media(max-width: 450px) {
+
+    .container {
+        padding: 12px;
+    }
+
+    .templates {
+        gap: 5px;
+    }
+
+    .template-preview {
+        height: 60px;
+        font-size: 9px;
+    }
+
+    button {
+        width: 100%;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>📸 My Photo Booth</h1>
+
+
+    <!-- TEMPLATE SELECTION -->
+
+    <div class="template-title">
+        Choose Template
+    </div>
+
+
+    <div class="templates">
+
+        <div class="template active" data-template="1">
+
+            <div class="template-preview t1">
+                SIMPLE
+            </div>
+
+        </div>
+
+
+        <div class="template" data-template="2">
+
+            <div class="template-preview t2">
+                LOVE ❤️
+            </div>
+
+        </div>
+
+
+        <div class="template" data-template="3">
+
+            <div class="template-preview t3">
+                CUTE ✨
+            </div>
+
+        </div>
+
+
+        <div class="template" data-template="4">
+
+            <div class="template-preview t4">
+                PARTY 🎉
+            </div>
+
+        </div>
+
+
+        <div class="template" data-template="5">
+
+            <div class="template-preview t5">
+                FILM
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- NAME -->
+
+    <input
+        type="text"
+        id="userName"
+        placeholder="Enter your name (optional)"
+    >
+
+
+    <!-- CAMERA -->
+
+    <div class="camera-box">
+
+        <video
+            id="video"
+            autoplay
+            playsinline>
+        </video>
+
+
+        <canvas id="canvas"></canvas>
+
+
+        <div id="countdown">
+            3
+        </div>
+
+    </div>
+
+
+    <!-- BUTTONS -->
+
+    <div class="buttons">
+
+        <button id="takePhoto">
+            📸 Take Photo
+        </button>
+
+
+        <button id="retake">
+            🔄 Retake
+        </button>
+
+
+        <button id="savePhoto">
+            💾 Save Photo
+        </button>
+
+    </div>
+
+
+    <div id="message">
+        Camera ready!
+    </div>
+
+</div>
+
+
+
+<script>
+
+/* =========================
+   VARIABLES
+========================= */
+
+const video =
+    document.getElementById("video");
+
+const canvas =
+    document.getElementById("canvas");
+
+const countdown =
+    document.getElementById("countdown");
+
+const takePhoto =
+    document.getElementById("takePhoto");
+
+const retake =
+    document.getElementById("retake");
+
+const savePhoto =
+    document.getElementById("savePhoto");
+
+const message =
+    document.getElementById("message");
+
+const userName =
+    document.getElementById("userName");
+
+
+let selectedTemplate = 1;
+
+
+
+/* =========================
+   TEMPLATE SELECTION
+========================= */
+
+const templates =
+    document.querySelectorAll(".template");
+
+
+templates.forEach(template => {
+
+    template.addEventListener("click", function() {
+
+        templates.forEach(t => {
+            t.classList.remove("active");
+        });
+
+        this.classList.add("active");
+
+        selectedTemplate =
+            Number(this.dataset.template);
+
+        message.textContent =
+            "Template " +
+            selectedTemplate +
+            " selected.";
+
+    });
+
+});
+
+
+
+/* =========================
+   CAMERA
+========================= */
+
+async function startCamera() {
+
+    try {
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: "user",
+
+                    width: {
+                        ideal: 1920
+                    },
+
+                    height: {
+                        ideal: 1080
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+
+        video.srcObject = stream;
+
+
+        message.textContent =
+            "Camera ready!";
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Camera permission is required.";
+
+    }
+
+}
+
+
+startCamera();
+
+
+
+/* =========================
+   TAKE PHOTO
+========================= */
+
+takePhoto.addEventListener(
+    "click",
+    async function() {
+
+        takePhoto.disabled = true;
+
+
+        /* COUNTDOWN */
+
+        countdown.style.display =
+            "block";
+
+        countdown.textContent =
+            "3";
+
+
+        await wait(1000);
+
+
+        countdown.textContent =
+            "2";
+
+
+        await wait(1000);
+
+
+        countdown.textContent =
+            "1";
+
+
+        await wait(1000);
+
+
+        countdown.style.display =
+            "none";
+
+
+        /* CAMERA SIZE */
+
+        const width =
+            video.videoWidth;
+
+        const height =
+            video.videoHeight;
+
+
+        canvas.width =
+            width;
+
+        canvas.height =
+            height;
+
+
+        const ctx =
+            canvas.getContext("2d");
+
+
+        /* MIRROR PHOTO */
+
+        ctx.save();
+
+        ctx.translate(width, 0);
+
+        ctx.scale(-1, 1);
+
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        ctx.restore();
+
+
+        /* APPLY TEMPLATE */
+
+        applyTemplate(
+            ctx,
+            width,
+            height
+        );
+
+
+        /* SHOW RESULT */
+
+        video.style.display =
+            "none";
+
+        canvas.style.display =
+            "block";
+
+
+        takePhoto.style.display =
+            "none";
+
+        retake.style.display =
+            "inline-block";
+
+        savePhoto.style.display =
+            "inline-block";
+
+
+        message.textContent =
+            "Photo captured!";
+
+
+        takePhoto.disabled =
+            false;
+
+    }
+);
+
+
+
+/* =========================
+   APPLY TEMPLATE
+========================= */
+
+function applyTemplate(
+    ctx,
+    width,
+    height
+) {
+
+    const name =
+        userName.value.trim();
+
+
+    /* =====================
+       TEMPLATE 1
+       SIMPLE WHITE
+    ===================== */
+
+    if(selectedTemplate === 1) {
+
+        ctx.lineWidth = 35;
+
+        ctx.strokeStyle = "white";
+
+        ctx.strokeRect(
+            17,
+            17,
+            width - 34,
+            height - 34
+        );
+
+
+        ctx.fillStyle =
+            "rgba(0,0,0,0.55)";
+
+
+        ctx.fillRect(
+            0,
+            height - 80,
+            width,
+            80
+        );
+
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 28px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            name || "MY PHOTO BOOTH",
+            width / 2,
+            height - 32
+        );
+
+    }
+
+
+
+    /* =====================
+       TEMPLATE 2
+       LOVE
+    ===================== */
+
+    if(selectedTemplate === 2) {
+
+        /* PINK BORDER */
+
+        ctx.lineWidth = 45;
+
+        ctx.strokeStyle =
+            "#ff8fab";
+
+        ctx.strokeRect(
+            22,
+            22,
+            width - 44,
+            height - 44
+        );
+
+
+        /* HEARTS */
+
+        ctx.font =
+            "45px Arial";
+
+        ctx.fillStyle =
+            "#ff2d55";
+
+
+        ctx.fillText(
+            "♥",
+            55,
+            70
+        );
+
+
+        ctx.fillText(
+            "♥",
+            width - 55,
+            70
+        );
+
+
+        ctx.fillText(
+            "♥",
+            55,
+            height - 25
+        );
+
+
+        ctx.fillText(
+            "♥",
+            width - 55,
+            height - 25
+        );
+
+
+        /* BOTTOM */
+
+        ctx.fillStyle =
+            "rgba(255,143,171,0.9)";
+
+
+        ctx.fillRect(
+            0,
+            height - 90,
+            width,
+            90
+        );
+
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 30px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            name || "LOVE",
+            width / 2,
+            height - 42
+        );
+
+    }
+
+
+
+    /* =====================
+       TEMPLATE 3
+       CUTE
+    ===================== */
+
+    if(selectedTemplate === 3) {
+
+        ctx.lineWidth = 40;
+
+        ctx.strokeStyle =
+            "#c084fc";
+
+        ctx.strokeRect(
+            20,
+            20,
+            width - 40,
+            height - 40
+        );
+
+
+        /* TOP TEXT */
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 32px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            "✨ CUTE DAY ✨",
+            width / 2,
+            55
+        );
+
+
+        /* BOTTOM */
+
+        ctx.fillStyle =
+            "rgba(192,132,252,0.9)";
+
+
+        ctx.fillRect(
+            0,
+            height - 90,
+            width,
+            90
+        );
+
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 28px Arial";
+
+
+        ctx.fillText(
+            name || "MEMORIES",
+            width / 2,
+            height - 40
+        );
+
+    }
+
+
+
+    /* =====================
+       TEMPLATE 4
+       PARTY
+    ===================== */
+
+    if(selectedTemplate === 4) {
+
+        ctx.lineWidth = 50;
+
+        ctx.strokeStyle =
+            "#ff9500";
+
+        ctx.strokeRect(
+            25,
+            25,
+            width - 50,
+            height - 50
+        );
+
+
+        /* TOP */
+
+        ctx.fillStyle =
+            "rgba(255,149,0,0.85)";
+
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            85
+        );
+
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 34px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            "🎉 PARTY TIME 🎉",
+            width / 2,
+            55
+        );
+
+
+        /* BOTTOM */
+
+        ctx.fillStyle =
+            "rgba(255,149,0,0.85)";
+
+
+        ctx.fillRect(
+            0,
+            height - 85,
+            width,
+            85
+        );
+
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 28px Arial";
+
+
+        ctx.fillText(
+            name || "PHOTO BOOTH",
+            width / 2,
+            height - 35
+        );
+
+    }
+
+
+
+    /* =====================
+       TEMPLATE 5
+       FILM STYLE
+    ===================== */
+
+    if(selectedTemplate === 5) {
+
+        /* BLACK BORDER */
+
+        ctx.lineWidth = 70;
+
+        ctx.strokeStyle =
+            "black";
+
+        ctx.strokeRect(
+            35,
+            35,
+            width - 70,
+            height - 70
+        );
+
+
+        /* TOP */
+
+        ctx.fillStyle =
+            "white";
+
+
+        ctx.font =
+            "bold 30px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            "PHOTO BOOTH",
+            width / 2,
+            42
+        );
+
+
+        /* BOTTOM */
+
+        const date =
+            new Date().toLocaleDateString();
+
+
+        ctx.font =
+            "24px Arial";
+
+
+        ctx.fillText(
+            name || "MEMORY",
+            width / 2,
+            height - 38
+        );
+
+
+        ctx.font =
+            "18px Arial";
+
+
+        ctx.fillText(
+            date,
+            width / 2,
+            height - 12
+        );
+
+    }
+
+}
+
+
+
+/* =========================
+   RETAKE
+========================= */
+
+retake.addEventListener(
+    "click",
+    function() {
+
+        canvas.style.display =
+            "none";
+
+        video.style.display =
+            "block";
+
+
+        retake.style.display =
+            "none";
+
+        savePhoto.style.display =
+            "none";
+
+
+        takePhoto.style.display =
+            "inline-block";
+
+
+        message.textContent =
+            "Ready for another photo.";
+
+    }
+);
+
+
+
+/* =========================
+   SAVE PHOTO
+========================= */
+
+savePhoto.addEventListener(
+    "click",
+    function() {
+
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.95
+            );
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href =
+            image;
+
+
+        link.download =
+            "my-photobooth-" +
+            Date.now() +
+            ".jpg";
+
+
+        link.click();
+
+    }
+);
+
+
+
+/* =========================
+   WAIT
+========================= */
+
+function wait(ms) {
+
+    return new Promise(
+        resolve => setTimeout(
+            resolve,
+            ms
+        )
+    );
+
+}
+
+</script>
+
+</body>
+</html>
